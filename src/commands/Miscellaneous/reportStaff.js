@@ -1,56 +1,70 @@
-import { configs } from '../../configs/index.js'
-import { packages } from '../../configs/packages.js'
+import {
+    configs
+} from '../../configs/index.js';
+import {
+    packages
+} from '../../configs/packages.js';
 
 export default {
     data: new packages.Discord.SlashCommandBuilder()
         .setName('report-staff')
-        .setDescription('Send the Server SSU Message'),
+        .setDescription('Report a staff member')
+        .addStringOption(option =>
+            option.setName('reason')
+            .setDescription('The reason to report the staff member')
+            .setRequired(true)
+        )
+        .addUserOption(option =>
+            option.setName('staff-member')
+            .setDescription('The staff member to report')
+            .setRequired(true)
+        ),
+
     async execute(interaction) {
         try {
-            const UserRoles = await interaction.member.roles.cache;
+            // Get the options from the interaction
+            const reason = interaction.options.getString('reason');
+            const staffMember = interaction.options.getUser('staff-member');
 
-            const AllowedRoles = [
-                configs.JSON.permissions.IA,
-                configs.JSON.permissions.director,
-                configs.JSON.permissions.management,
-            ]
-
-            const CanRun = UserRoles ? await UserRoles.some(role => AllowedRoles.includes(role.id)) : false
-
-            if (!CanRun) {
-                return await interaction.reply({
-                    content: '[Error]: You do not have the correct permission to run this command',
-                    flags: packages.Discord.MessageFlags.Ephemeral
-                })
-            }
-
-            const embed = new packages.Discord.EmbedBuilder()
-                .setTitle('Coastline State SSU System')
+            // Create an embed for the report
+            const reportEmbed = new packages.Discord.EmbedBuilder()
+                .setTitle('Staff Report')
+                .setDescription(`A staff member has been reported.`)
                 .setColor('Red')
-                .setDescription('A Server startup has been commenced. Join using the information below:')
-                .setFields([
-                    { name: '**Hosted By:**', value: `${interaction.user}` },
-                    { name: '**Server Code:**', value: 'CLSTATERP' },
-                ])
-            
-            const channel = await interaction.guild.channels.cache.get(configs.JSON.channel.SSU)
+                .setTimestamp()
+                .addFields({
+                    name: 'Reported By:',
+                    value: `<@${interaction.user.id}>`,
+                    inline: true
+                }, {
+                    name: 'Staff Member:',
+                    value: `<@${staffMember.id}>`,
+                    inline: true
+                }, {
+                    name: 'Reason:',
+                    value: reason,
+                    inline: false
+                });
 
-            await channel.send({
-                content: `<@&${interaction.guild.id}>`,
-                embeds: [embed],
-            })
+            const reportChannel = await interaction.guild.channels.fetch(configs.JSON.channel['Staff-Reports']);
 
-            return await interaction.reply({
-                content: 'Success!, The message has been posted successfully',
-                flags: packages.Discord.MessageFlags.Ephemeral
-            })
-                
-        } catch (error) {
-            console.log(error)
+            // Send the report to the report channel
+            await reportChannel.send({
+                embeds: [reportEmbed]
+            });
+
+            // Respond to the user that the report has been submitted
             await interaction.reply({
-                content: 'There was an error with this command',
+                content: `Your report for <@${staffMember.id}> has been successfully submitted! Thank you for helping us keep the community safe.`,
                 flags: packages.Discord.MessageFlags.Ephemeral
-            })
+            });
+
+        } catch (error) {
+            console.error(error);
+            await interaction.reply({
+                content: 'There was an error with this command.',
+                flags: packages.Discord.MessageFlags.Ephemeral
+            });
         }
     }
-}
+};
