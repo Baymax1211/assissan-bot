@@ -14,6 +14,7 @@ export default {
                 configs.JSON.permissions.director,
                 configs.JSON.permissions.management,
             ]
+
             const CanRun = UserRoles ? await UserRoles.some(role => AllowedRoles.includes(role.id)) : false
 
             if (!CanRun) {
@@ -61,7 +62,7 @@ export default {
                 components: [ActionRow]
             })
 
-            await interaction.reply({
+            return await interaction.reply({
                 content: 'Success!, the message has been posted successfully',
                 flags: packages.Discord.MessageFlags.Ephemeral
             })

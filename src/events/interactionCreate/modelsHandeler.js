@@ -1,6 +1,6 @@
 import {
 	packages
-} from '../../configs/packages.js'
+} from '../../configs/packages.js';
 
 export default {
 	name: 'Models Interaction Handler',
@@ -9,15 +9,16 @@ export default {
 	once: false,
 	async execute(interaction) {
 		try {
-			// If the interaction is not a Model do nothing
+			// If the interaction is not a Modal, do nothing
 			if (!interaction.isModalSubmit()) return;
 
 			// Get all the Models
 			const ModelsDir = packages.fs.readdirSync('./src/interactions/models').filter(file => file.endsWith('.js'));
-			const data = interaction.modelData;
+			const data = interaction.fields.fields ? interaction.fields.fields.toJSON() : [];
+
+			let modelFound = false;
 
 			for (const file of ModelsDir) {
-				// Use dynamic import and destructure to get the default export
 				const {
 					default: FileExports
 				} = await import(`../../interactions/models/${file}`);
@@ -28,6 +29,7 @@ export default {
 					if (typeof FileExports.execute === 'function') {
 						// Execute the SelectMenu
 						await FileExports.execute(interaction, data);
+						modelFound = true;
 						break;
 					} else {
 						console.error(`execute is not a function for ${interaction.customId}`);
@@ -35,17 +37,30 @@ export default {
 				}
 			}
 
-			return await interaction.reply({
-				content: 'There was an error while executing this Model! Model not found',
-				flags: packages.Discord.MessageFlags.Ephemeral,
-			})
+			// If no model found, follow-up with an error
+			if (!modelFound) {
+				return await interaction.followUp({
+					content: 'There was an error while executing this Model! Model not found',
+					flags: packages.Discord.MessageFlags.Ephemeral,
+				});
+			}
 
 		} catch (error) {
 			console.error(error);
-			await interaction.reply({
-				content: 'There was an error while executing this Model!',
-				flags: packages.Discord.MessageFlags.Ephemeral,
-			});
+
+			// Make sure we're only replying once
+			if (!interaction.replied) {
+				await interaction.reply({
+					content: 'There was an error while executing this Model!',
+					flags: packages.Discord.MessageFlags.Ephemeral,
+				});
+			} else {
+				// Use followUp if already replied to
+				await interaction.followUp({
+					content: 'There was an error while executing this Model!',
+					flags: packages.Discord.MessageFlags.Ephemeral,
+				});
+			}
 		}
 	},
 };

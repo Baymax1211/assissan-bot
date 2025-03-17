@@ -25,7 +25,7 @@ const client = new packages.Discord.Client({
     console.log(packages.colors.green(`[Client]: The client is ready!`))
 })();
 
-// Exit handelet
+// Exit handeler
 process.on('SIGINT', async () => {
     await client.user.setPresence({ status: 'invisible' })
     client.destroy()

@@ -1,4 +1,6 @@
-import { packages } from '../../configs/packages.js'
+import {
+	packages
+} from '../../configs/packages.js'
 export default {
 	name: 'Commands Interaction Handler',
 	description: 'Commands Interaction Handler system',
@@ -19,10 +21,19 @@ export default {
 			await command.execute(interaction);
 		} catch (error) {
 			console.error(error);
-			await interaction.reply({
-				content: 'There was an error while executing this command!',
-				flags: packages.Discord.MessageFlags.Ephemeral,
-			});
+			// Make sure we're only replying once
+			if (!interaction.replied) {
+				await interaction.reply({
+					content: 'There was an error while executing this Command!',
+					flags: packages.Discord.MessageFlags.Ephemeral,
+				});
+			} else {
+				// Use followUp if already replied to
+				await interaction.followUp({
+					content: 'There was an error while executing this Command!',
+					flags: packages.Discord.MessageFlags.Ephemeral,
+				});
+			}
 		}
 	},
 };

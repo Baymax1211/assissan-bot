@@ -1,4 +1,6 @@
-import { packages } from '../../configs/packages.js';
+import {
+  packages
+} from '../../configs/packages.js';
 
 export default {
   name: 'SelectMenu Interaction Handler',
@@ -13,17 +15,14 @@ export default {
       // Get all the SelectMenus
       const SelectMenusDir = packages.fs.readdirSync('./src/interactions/select-menu').filter(file => file.endsWith('.js'));
 
-      // Check if the SelectMenu exists
       let replied = false;
       for (const file of SelectMenusDir) {
-        // Use dynamic import and destructure to get the default export
-        const { default: FileExports } = await import(`../../interactions/select-menu/${file}`);
+        const {
+          default: FileExports
+        } = await import(`../../interactions/select-menu/${file}`);
 
-        // Check if the customId matches the interaction
         if (FileExports && FileExports.customId === interaction.customId) {
-          // Ensure execute is a function before calling it
           if (typeof FileExports.execute === 'function') {
-            // Execute the SelectMenu
             await FileExports.execute(interaction);
             replied = true;
             break;
@@ -33,7 +32,6 @@ export default {
         }
       }
 
-      // If not replied yet, send a default reply message
       if (!replied && !interaction.replied && !interaction.deferred) {
         await interaction.reply({
           content: 'There was an error while executing this SelectMenu! Menu not found',
@@ -43,9 +41,16 @@ export default {
 
     } catch (error) {
       console.error(error);
-      if (!interaction.replied && !interaction.deferred) {
+      // Make sure we're only replying once
+      if (!interaction.replied) {
         await interaction.reply({
-          content: 'There was an error while executing this SelectMenu!',
+          content: 'There was an error while executing this Select Menu!',
+          flags: packages.Discord.MessageFlags.Ephemeral,
+        });
+      } else {
+        // Use followUp if already replied to
+        await interaction.followUp({
+          content: 'There was an error while executing this Select Menu!',
           flags: packages.Discord.MessageFlags.Ephemeral,
         });
       }

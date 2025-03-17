@@ -14,9 +14,10 @@ export default {
                 .setCustomId('Ticket-Create')
 
             const Reason_To_Open = new packages.Discord.TextInputBuilder()
-                .setCustomId('reason')
+                .setCustomId(`reason-${value}`)
                 .setLabel("What is the reason for this ticket?")
                 .setStyle(packages.Discord.TextInputStyle.Paragraph)
+                .setRequired(true)
 
             const ActionRow_Reason = new packages.Discord.ActionRowBuilder()
                 .addComponents(Reason_To_Open)

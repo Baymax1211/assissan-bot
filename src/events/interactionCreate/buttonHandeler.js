@@ -19,14 +19,14 @@ export default {
 				// Use dynamic import and destructure to get the default export
 				const {
 					default: FileExports
-				} = await import(`../../interactions/models/${file}`);
+				} = await import(`../../interactions/buttons/${file}`);
 
 				// Check if the customId matches the interaction
 				if (FileExports && FileExports.customId === interaction.customId) {
 					// Ensure execute is a function before calling it
 					if (typeof FileExports.execute === 'function') {
 						// Execute the SelectMenu
-						await FileExports.execute(interaction, data);
+						await FileExports.execute(interaction);
 						break;
 					} else {
 						console.error(`execute is not a function for ${interaction.customId}`);
@@ -37,15 +37,21 @@ export default {
 				content: 'There was an error while executing this Button! Button not found',
 				flags: packages.Discord.MessageFlags.Ephemeral,
 			})
-
-			// Execute the Button
-			await button.execute(interaction);
 		} catch (error) {
 			console.error(error);
-			await interaction.reply({
-				content: 'There was an error while executing this button!',
-				flags: packages.Discord.MessageFlags.Ephemeral,
-			});
+			// Make sure we're only replying once
+			if (!interaction.replied) {
+				await interaction.reply({
+					content: 'There was an error while executing this Button!',
+					flags: packages.Discord.MessageFlags.Ephemeral,
+				});
+			} else {
+				// Use followUp if already replied to
+				await interaction.followUp({
+					content: 'There was an error while executing this Button!',
+					flags: packages.Discord.MessageFlags.Ephemeral,
+				});
+			}
 		}
 	},
 };
